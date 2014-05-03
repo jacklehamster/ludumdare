@@ -8,25 +8,35 @@ package
 	import flash.filesystem.FileStream;
 	import flash.net.URLLoader;
 	import flash.net.URLRequest;
+	import flash.text.TextField;
 	
 	public class LD29 extends Sprite
 	{
-		var start:int = 0;
-		var url:String = "http://www.ludumdare.com/compo/ludum-dare-29/?action=preview&q=&etype=&start=%start";
-		var prefix:String = "http://www.ludumdare.com/compo/ludum-dare-29/?action=preview&uid=";
-		var imgprefix:String = "http://www.ludumdare.com/compo/wp-content/compo2/thumb/";
-		var entries:Array = [];
-		var xml:XML = new XML();
-		var pending:int = 0;
+		static private const MAXDOWNLOADS:int = 10;
+		static private const PAGING:int = 24;
+		
+		private var start:int = 0;
+		private var url:String = "http://www.ludumdare.com/compo/ludum-dare-29/?action=preview&q=&etype=&start=%start";
+		private var prefix:String = "http://www.ludumdare.com/compo/ludum-dare-29/?action=preview&uid=";
+		private var imgprefix:String = "http://www.ludumdare.com/compo/wp-content/compo2/thumb/";
+		private var entries:Array = [];
+		private var pending:int = 0;
+		private var fetchers:Array = [];
+
+		private var tf:TextField = new TextField();
+		
 		public function LD29()
 		{
+			addChild(tf);
+			tf.multiline = true;
+			tf.width = stage.stageWidth;
+			tf.height = stage.stageHeight;
 //			followUp({id:20841});
 			
 //			return;
 			fetch();
 		}
 		
-		var fetchers:Array = [];
 		
 		
 		public function fetch():void {
@@ -34,7 +44,7 @@ package
 //			start = 2000;
 			var u:String = url.replace("%start",start);
 			//trace(u);
-			start += 24;
+			start += PAGING;
 			//trace(u);
 //			urlloader.load(new URLRequest(u));
 			var urlloader:URLLoader = new URLLoader();
@@ -42,6 +52,7 @@ package
 			urlloader.addEventListener(IOErrorEvent.IO_ERROR,
 				function(e:IOErrorEvent):void {
 					trace(e);
+					tf.appendText(e+"\n");
 					inProgress--;
 					prepare(urlloader,u);
 				});
@@ -55,11 +66,13 @@ package
 		}
 		
 		private function process():void {
-			if(inProgress<10) {
+			if(inProgress<MAXDOWNLOADS) {
 				var obj:Object = fetchers.pop();
 				if(obj) {
 					inProgress++;
 					trace(pending,inProgress,obj.url);
+					tf.appendText([pending,inProgress,obj.url]+"\n");
+					
 					obj.loader.load(new URLRequest(obj.url));
 				}
 			}
@@ -88,7 +101,7 @@ package
 				var title:String = chunk.split("class='title'><i>")[1].split("</i></div>")[0];
 				var author:String = chunk.split("</i></div>")[1];
 		
-				followUp({id:id,title:title,author:author,img:img});
+				followUp({id:prefix+id,title:title,author:author,img:imgprefix+img});
 				found = true;
 			}
 			if(found) {
@@ -147,6 +160,7 @@ package
 			loader.addEventListener(IOErrorEvent.IO_ERROR,
 				function(e:IOErrorEvent):void {
 					trace(e);
+					tf.appendText(e+"\n");
 					inProgress--;
 					prepare(loader,followup);
 				});
@@ -155,12 +169,14 @@ package
 		
 		private function checkCompletion():void {
 			if(!pending) {
+				//	the file ends up in our document directory
 				var file:File = File.documentsDirectory.resolvePath("LD29.json");
 				var stream:FileStream = new FileStream();
 				stream.open(file,FileMode.WRITE);
 				stream.writeUTFBytes(JSON.stringify(entries,null,'\t'));
 				stream.close();
 				trace("\nDONE");
+				tf.appendText("\nDONE");
 			}
 		}
 	}
