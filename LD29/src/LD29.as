@@ -12,7 +12,7 @@ package
 	
 	public class LD29 extends Sprite
 	{
-		static private const MAXDOWNLOADS:int = 10;
+		static private const MAXDOWNLOADS:int = 15;
 		static private const PAGING:int = 24;
 		
 		private var start:int = 0;
@@ -53,6 +53,7 @@ package
 				function(e:IOErrorEvent):void {
 					trace(e);
 					tf.appendText(e+"\n");
+					tf.setSelection(tf.length,tf.length);
 					inProgress--;
 					prepare(urlloader,u);
 				});
@@ -72,6 +73,7 @@ package
 					inProgress++;
 					trace(pending,inProgress,obj.url);
 					tf.appendText([pending,inProgress,obj.url]+"\n");
+					tf.setSelection(tf.length,tf.length);
 					
 					obj.loader.load(new URLRequest(obj.url));
 				}
@@ -101,7 +103,7 @@ package
 				var title:String = chunk.split("class='title'><i>")[1].split("</i></div>")[0];
 				var author:String = chunk.split("</i></div>")[1];
 		
-				followUp({id:prefix+id,title:title,author:author,img:imgprefix+img});
+				followUp({id:id,link:prefix+id,title:title,author:author,img:imgprefix+img});
 				found = true;
 			}
 			if(found) {
@@ -161,6 +163,7 @@ package
 				function(e:IOErrorEvent):void {
 					trace(e);
 					tf.appendText(e+"\n");
+					tf.setSelection(tf.length,tf.length);
 					inProgress--;
 					prepare(loader,followup);
 				});
@@ -177,6 +180,7 @@ package
 				stream.close();
 				trace("\nDONE");
 				tf.appendText("\nDONE");
+				tf.setSelection(tf.length,tf.length);
 			}
 		}
 	}
